@@ -1,0 +1,243 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Log {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  level     String
+  message   String
+  context   String
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  timestamp DateTime @db.Date
+
+  @@index([timestamp], map: "timestamp_1")
+}
+
+model User {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  username      String      @unique
+  email         String      @unique
+  onboarding    Boolean     @default(false)
+  userSecret    UserSecret?
+  profile       Profile?
+  eventsJoined  String[]    @db.ObjectId
+  events        Event[]     @relation("participants", fields: [eventsJoined], references: [id])
+  createdEvents Event[]     @relation("creator")
+  Session       Session[]
+  categoryIDs   String[]    @db.ObjectId
+  categories    Category[]  @relation(fields: [categoryIDs], references: [id])
+  followedBy    User[]      @relation("UserFollows", fields: [followedByIDs], references: [id])
+  followedByIDs String[]    @db.ObjectId
+  following     User[]      @relation("UserFollows", fields: [followingIDs], references: [id])
+  followingIDs  String[]    @db.ObjectId
+
+  FollowingRequestTo FollowingRequest[] @relation("followingRequestTo")
+  FollowingRequestBy FollowingRequest[] @relation("followingRequestBy")
+  NotificationsIds   String[]           @db.ObjectId
+  Notifications      Notification[]     @relation("NotificationTo", fields: [NotificationsIds], references: [id])
+  Notification       Notification[]
+  EventPosts         EventPost[]
+  EventComments      EventComment[]
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  type      String?
+  refID     String?  @db.ObjectId
+  message   String
+  creator   User?    @relation(fields: [userId], references: [id])
+  users     User[]   @relation("NotificationTo", fields: [userIDs], references: [id])
+  userIDs   String[] @db.ObjectId
+  userId    String?  @db.ObjectId
+}
+
+model Category {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  name    String   @unique
+  userIDs String[] @db.ObjectId
+  users   User[]   @relation(fields: [userIDs], references: [id])
+}
+
+model Profile {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  realName    String?
+  displayName String?
+  gender      String?
+  bio         String?
+  eventCount  Int           @default(0)
+  colors      profileColor?
+
+  isProfilePublic Boolean @default(true)
+  user            User?   @relation(fields: [userId], references: [id])
+  userId          String? @unique @db.ObjectId
+  avatar          String?
+}
+
+model UserSecret {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  updatedAt DateTime @updatedAt
+  hashpw    String
+  user      User?    @relation(fields: [userId], references: [username])
+  userId    String?  @unique
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  hashedAt  String?
+  hashedRt  String?
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  Devices   Device   @relation(fields: [deviceIDs], references: [id])
+  deviceIDs String   @db.ObjectId
+}
+
+model Device {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt    DateTime  @default(now())
+  deviceId     String?   @unique
+  platform     String?
+  manufacturer String?
+  sessions     Session[]
+}
+
+model FollowingRequest {
+  id        String                 @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  fromIDs   String                 @db.ObjectId
+  toIDs     String                 @db.ObjectId
+  status    FollowingRequestStatus @default(pending)
+  From      User                   @relation("followingRequestTo", fields: [fromIDs], references: [id])
+  To        User                   @relation("followingRequestBy", fields: [toIDs], references: [id])
+}
+
+enum FollowingRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+type LatLng {
+  latitude  Float
+  longitude Float
+}
+
+type Region {
+  latitudeDelta  Float
+  longitudeDelta Float
+  latitude       Float
+  longitude      Float
+}
+
+type profileColor {
+  c1 String @default("#FFEAE5")
+  c2 String @default("#8C84D4")
+}
+
+type Color {
+  c1 String
+  c2 String
+}
+
+enum MemberType {
+  LIMIT
+  UNLIMITED
+}
+
+model Event {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  name            String
+  description     String
+  startDate       DateTime
+  endDate         DateTime
+  locationName    String
+  locationDetails String
+  location        Region
+  locationMarker  LatLng
+  memberType      MemberType
+  memberLimit     Int
+  isPublic        Boolean
+  eventColors     Color
+  creatorId       String
+  creator         User?           @relation("creator", fields: [creatorId], references: [username])
+  participantsId  String[]        @db.ObjectId
+  participants    User[]          @relation("participants", fields: [participantsId], references: [id])
+  eventChat       EventChat?
+  EventPost       EventPost[]
+  EventPinedPost  EventPinedPost? @relation("pinPost")
+}
+
+model EventPinedPost {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  content   String
+  eventId   String   @unique @db.ObjectId
+  event     Event    @relation("pinPost", fields: [eventId], references: [id])
+}
+
+model EventPost {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  content   String
+  creatorId String
+  creator   User?          @relation(fields: [creatorId], references: [username])
+  eventId   String
+  event     Event?         @relation(fields: [eventId], references: [id])
+  comments  EventComment[]
+  likes     Int            @default(0)
+}
+
+model EventComment {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  content   String
+  creatorId String
+  creator   User?      @relation(fields: [creatorId], references: [username])
+  postId    String
+  post      EventPost? @relation(fields: [postId], references: [id])
+}
+
+model EventChat {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  updatedAt DateTime  @updatedAt
+  eventId   String    @unique @db.ObjectId
+  event     Event?    @relation(fields: [eventId], references: [id])
+  messages  Message[]
+}
+
+model Message {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  senderName  String
+  message     String
+  date        DateTime   @default(now())
+  EventChat   EventChat? @relation(fields: [eventChatId], references: [id])
+  eventChatId String     @db.ObjectId
+}
+
+// enum Role {
+//   USER
+//   ADMIN
+// }

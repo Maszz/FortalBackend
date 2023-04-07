@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  // url      = "mongodb+srv://user:cyCrKA5yF5O0fchi@cluster0.ubk8hwf.mongodb.net/sf341?retryWrites=true&w=majority"
+  url      = "mongodb://192.168.1.183:49155/sf341?readPreference=primary&directConnection=true&ssl=false"
+}
+
+model Message {
+  sender_id  String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderName String
+  message    String
+  date       DateTime @default(now())
+}
+
+model Log {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  level     String
+  message   String
+  context   String
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  timestamp DateTime @db.Date
+
+  @@index([timestamp], map: "timestamp_1")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // id        Int      @id @default(autoincrement())
+  username  String   @unique
+  name      String
+  email     String   @unique
+  hashpw    String
+  hashedRt  String?
+}

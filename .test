@@ -1,0 +1,18 @@
+query Message{
+  getMessage(getMessageInput: { offset: 0, limit: 20 }) {
+    sender_id
+    senderName
+    message
+  }
+}
+# mutation Message{
+#   saveMessage(saveMessageData:{
+#     senderName:"test",
+#     message:"ทดสอบ3",
+
+#   }){
+#     senderName
+#     message
+#     date
+#   }
+# }

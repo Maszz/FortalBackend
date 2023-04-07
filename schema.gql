@@ -1,0 +1,44 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Message {
+  id: ID!
+  sender_id: String
+  senderName: String
+  message: String
+  date: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Query {
+  getMessage(getMessageInput: GetMessageInput!): [Message!]!
+}
+
+input GetMessageInput {
+  offset: Int = 0
+  limit: Int = 20
+  eventChatId: String!
+}
+
+type Mutation {
+  saveMessage(saveMessageData: SaveMessageInput!): Message!
+}
+
+input SaveMessageInput {
+  senderName: String!
+  message: String!
+  eventChatId: String
+}
+
+type Subscription {
+  messageAdded(subsciptionInput: SubscripionInput!): Message!
+}
+
+input SubscripionInput {
+  eventChatId: String!
+}

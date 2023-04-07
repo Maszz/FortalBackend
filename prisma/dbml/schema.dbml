@@ -1,0 +1,245 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Log {
+  id String [pk]
+  level String [not null]
+  message String [not null]
+  context String [not null]
+  timestamp DateTime [not null, note: 'Could not determine type: the field only had null or empty values in the sample set.']
+}
+
+Table User {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  username String [unique, not null]
+  email String [unique, not null]
+  onboarding Boolean [not null, default: false]
+  userSecret UserSecret
+  profile Profile
+  eventsJoined String[] [not null]
+  events Event [not null]
+  createdEvents Event [not null]
+  Session Session [not null]
+  categoryIDs String[] [not null]
+  categories Category [not null]
+  followedBy User [not null]
+  followedByIDs String[] [not null]
+  following User [not null]
+  followingIDs String[] [not null]
+  FollowingRequestTo FollowingRequest [not null]
+  FollowingRequestBy FollowingRequest [not null]
+  NotificationsIds String[] [not null]
+  Notifications Notification [not null]
+  Notification Notification [not null]
+  EventPosts EventPost [not null]
+  EventComments EventComment [not null]
+}
+
+Table Notification {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  type String
+  refID String
+  message String [not null]
+  creator User
+  users User [not null]
+  userIDs String[] [not null]
+  userId String
+}
+
+Table Category {
+  id String [pk]
+  name String [unique, not null]
+  userIDs String[] [not null]
+  users User [not null]
+}
+
+Table Profile {
+  id String [pk]
+  realName String
+  displayName String
+  gender String
+  bio String
+  eventCount Int [not null, default: 0]
+  colors profileColor
+  isProfilePublic Boolean [not null, default: true]
+  user User
+  userId String [unique]
+  avatar String
+}
+
+Table UserSecret {
+  id String [pk]
+  updatedAt DateTime [not null]
+  hashpw String [not null]
+  user User
+  userId String [unique]
+}
+
+Table Session {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  hashedAt String
+  hashedRt String
+  userId String [not null]
+  user User [not null]
+  Devices Device [not null]
+  deviceIDs String [not null]
+}
+
+Table Device {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  deviceId String [unique]
+  platform String
+  manufacturer String
+  sessions Session [not null]
+}
+
+Table FollowingRequest {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  fromIDs String [not null]
+  toIDs String [not null]
+  status FollowingRequestStatus [not null, default: 'pending']
+  From User [not null]
+  To User [not null]
+}
+
+Table Event {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  name String [not null]
+  description String [not null]
+  startDate DateTime [not null]
+  endDate DateTime [not null]
+  locationName String [not null]
+  locationDetails String [not null]
+  location Region [not null]
+  locationMarker LatLng [not null]
+  memberType MemberType [not null]
+  memberLimit Int [not null]
+  isPublic Boolean [not null]
+  eventColors Color [not null]
+  creatorId String [not null]
+  creator User
+  participantsId String[] [not null]
+  participants User [not null]
+  eventChat EventChat
+  EventPost EventPost [not null]
+  EventPinedPost EventPinedPost
+}
+
+Table EventPinedPost {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  content String [not null]
+  eventId String [unique, not null]
+  event Event [not null]
+}
+
+Table EventPost {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  content String [not null]
+  creatorId String [not null]
+  creator User
+  eventId String [not null]
+  event Event
+  comments EventComment [not null]
+  likes Int [not null, default: 0]
+}
+
+Table EventComment {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  content String [not null]
+  creatorId String [not null]
+  creator User
+  postId String [not null]
+  post EventPost
+}
+
+Table EventChat {
+  id String [pk]
+  updatedAt DateTime [not null]
+  eventId String [unique, not null]
+  event Event
+  messages Message [not null]
+}
+
+Table Message {
+  id String [pk]
+  senderName String [not null]
+  message String [not null]
+  date DateTime [default: `now()`, not null]
+  EventChat EventChat
+  eventChatId String [not null]
+}
+
+Enum FollowingRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+Enum MemberType {
+  LIMIT
+  UNLIMITED
+}
+
+Ref: User.eventsJoined - Event.id
+
+Ref: User.categoryIDs > Category.id
+
+Ref: User.followedByIDs > User.id
+
+Ref: User.followingIDs > User.id
+
+Ref: User.NotificationsIds - Notification.id
+
+Ref: Notification.userId > User.id
+
+Ref: Notification.userIDs > User.id
+
+Ref: Category.userIDs > User.id
+
+Ref: Profile.userId - User.id
+
+Ref: UserSecret.userId - User.username
+
+Ref: Session.userId > User.id
+
+Ref: Session.deviceIDs > Device.id
+
+Ref: FollowingRequest.fromIDs > User.id
+
+Ref: FollowingRequest.toIDs > User.id
+
+Ref: Event.creatorId > User.username
+
+Ref: Event.participantsId > User.id
+
+Ref: EventPinedPost.eventId - Event.id
+
+Ref: EventPost.creatorId > User.username
+
+Ref: EventPost.eventId > Event.id
+
+Ref: EventComment.creatorId > User.username
+
+Ref: EventComment.postId > EventPost.id
+
+Ref: EventChat.eventId - Event.id
+
+Ref: Message.eventChatId > EventChat.id
